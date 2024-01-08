@@ -17,6 +17,7 @@ public class ShoppingMapper implements IMapperGeneric<ShoppingCardEntity, Shoppi
     @Override
     public ShoppingCartResponse EntityToResponse(ShoppingCardEntity shoppingCardEntity) {
         return ShoppingCartResponse.builder()
+                .cartId(shoppingCardEntity.getCartId())
                 .productName(shoppingCardEntity.getProduct().getProductName())
                 .quantity(shoppingCardEntity.getQuantity())
                 .price(shoppingCardEntity.getQuantity()*shoppingCardEntity.getProduct().getUnitPrice().longValue())

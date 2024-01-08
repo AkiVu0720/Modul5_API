@@ -1,4 +1,4 @@
-package com.product02.config;
+package com.product02.config.customSecurity;
 
 import com.product02.config.customSecurity.CustomAuthenProvider;
 import com.product02.utils.jwt.JwtFiler;
@@ -32,9 +32,6 @@ public class WebSecurityConfig  {
 }
 @Bean
 public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
-
-
-
     return httpSecurity.csrf().disable().sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             .and().authorizeHttpRequests()
             .requestMatchers("/api.myservice.com/v1/**").permitAll()
@@ -43,6 +40,13 @@ public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Excepti
             .addFilterBefore(jwtFiler, UsernamePasswordAuthenticationFilter.class)
             .build();
 }
+
+    /**
+     *
+     * @param httpSecurity
+     * @return
+     * @throws Exception
+     */
     @Bean
     public AuthenticationManager authenticationManager(HttpSecurity httpSecurity) throws Exception {
         return httpSecurity.getSharedObject(AuthenticationManagerBuilder.class)

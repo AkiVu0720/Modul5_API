@@ -52,7 +52,7 @@ public class ProductMapper implements IMapperGeneric<ProductEntity, ProductReque
     public ProductPermitResponse EntityToResponsePermit(ProductEntity productEntity) {
         return ProductPermitResponse.builder()
                 .productId(productEntity.getProductId())
-                .categoryId(productEntity.getCategory().getCategoryId())
+                .categoryName(productEntity.getCategory().getCategoryName())
                 .sku(productEntity.getSku())
                 .productName(productEntity.getProductName())
                 .description(productEntity.getDescription())

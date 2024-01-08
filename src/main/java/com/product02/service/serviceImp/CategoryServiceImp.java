@@ -36,9 +36,12 @@ public class CategoryServiceImp implements CategoryService {
     @Lazy
     private ProductMapper productMapper;
     @Override
-    public Page<CategoryResponse> findAll(int page, int size, String nameDirection) {
+    /**
+     * Phân trang danh mục
+     */
+    public Page<CategoryResponse> findAll(int page, int size, String nameDirection,String idDirection) {
         try {
-            Pageable pageable = pageableSort(page,size,nameDirection);
+            Pageable pageable = pageableSort(page,size,nameDirection,idDirection);
             Page<CategoryEntity> list= categoryRepository.findAll(pageable);
             List<CategoryResponse>categoryResponses= list.getContent()
                     .stream()
@@ -51,8 +54,10 @@ public class CategoryServiceImp implements CategoryService {
         }
 
     }
-    public Pageable pageableSort(int page, int size, String nameDirection){
+    public Pageable pageableSort(int page, int size, String nameDirection, String idDirection){
         List<Sort.Order> orderList = new ArrayList<>();
+        Sort.Order orderId = sortCategory(idDirection,"categoryId");
+        orderList.add(orderId);
         Sort.Order orderName = sortCategory(nameDirection,"categoryName");
         orderList.add(orderName);
         Pageable pageable = PageRequest.of(page,size,Sort.by(orderList));
@@ -99,9 +104,19 @@ public class CategoryServiceImp implements CategoryService {
         }
     }
 
+    /**
+     * Tạo mới danh mục
+     * @param categoryRequest
+     * @return
+     */
+
     @Override
     public CategoryResponse create(CategoryRequest categoryRequest) {
         try {
+            CategoryEntity category = categoryRepository.findByCategoryName(categoryRequest.getCategoryName());
+            if (category!=null){
+                throw new CustomException("Category type exist");
+            }
         return mapper.EntityToResponse(categoryRepository.save(mapper.requestToEntity(categoryRequest)));
         } catch (Exception e){
             throw new CustomException("Error create Category: "+e.getMessage());
@@ -112,6 +127,10 @@ public class CategoryServiceImp implements CategoryService {
     public CategoryResponse update(long categoryId, CategoryUpdateRequest categoryUpdateRequest) {
         try {
             Optional<CategoryEntity> category = categoryRepository.findById(categoryId);
+            if (categoryRepository.existsByCategoryName(categoryUpdateRequest.getCategoryName())
+                    &&!category.get().getCategoryName().equals(categoryUpdateRequest.getCategoryName())){
+                throw  new CustomException("Category not Exist");
+            }
             if (category.isPresent()){
                 category.get().setCategoryName(categoryUpdateRequest.getCategoryName());
                 category.get().setDescription(categoryUpdateRequest.getDescription());
@@ -130,8 +149,7 @@ public class CategoryServiceImp implements CategoryService {
         Optional<CategoryEntity> categoryEntity = categoryRepository.findById(categoryId);
         if (categoryEntity.isPresent()){
             categoryEntity.get().setStatus(false);
-            categoryRepository.save(categoryEntity.get());
-            return true;
+            return categoryRepository.save(categoryEntity.get()).isStatus();
         }else {
             throw  new CustomException("Category not Exist");
         }
@@ -141,6 +159,7 @@ public class CategoryServiceImp implements CategoryService {
 
     @Override
     public List<BasicResponse> revenueCategory() {
+
         return categoryRepository.revenueCategory();
     }
 }

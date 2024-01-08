@@ -22,7 +22,7 @@ import java.util.Map;
 
 @Repository
 public interface ProductRepository extends JpaRepository<ProductEntity,Long> {
-    boolean existsByProductNameContainingIgnoreCase(String productName);
+    boolean existsByProductName(String productName);
     boolean existsBySku(String sku);
     Page<ProductEntity>findByStatusIsTrue(Pageable pageable);
     List<ProductEntity> findByProductNameContainingIgnoreCaseAndDescriptionContainingIgnoreCase(String productName, String description);
@@ -30,7 +30,8 @@ public interface ProductRepository extends JpaRepository<ProductEntity,Long> {
     List<ProductEntity> findByDescriptionContainingIgnoreCase( String description);
 
     List<ProductEntity>findByCategory_CategoryIdAndStatusIsTrue(long categoryId);
-    List<ProductEntity>findTop10ByStatusIsTrueOrderByCreatedDesc();
+    @Query("select p from ProductEntity p ORDER BY p.created desc limit 5")
+    List<ProductEntity>findTop5ByStatusIsTrueOrderByCreatedDesc11();
 
     // đoạn new com...  là gọi đến tạo mới  đối tượng BestSellerResponse(). Tham số bên trong tương ứng với 2 value trong class.
     //List<BestSellerResponse>: dữ liệu trả ra là list đối tượng BestSellerResponse. Hứng các giá trị của câu query trả ra.

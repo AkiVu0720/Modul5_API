@@ -28,7 +28,6 @@ public class MapperRegister implements IMapperGeneric<UserEntity, RegisterReques
     @Autowired
     private RolesService rolesService;
     public UserEntity requestToEntity(RegisterRequest registerRequest) {
-//        Set<RolesEntity> listRole = userService.getListRoleFromRegister(registerRequest.getListRoles());
         RolesEntity userRole = rolesService.findByName(ERoles.ROLE_USER)
                 .orElseThrow(()->new RuntimeException("Error: Role is not found"));
         Set<RolesEntity> listRoles = new HashSet<>();
@@ -38,6 +37,7 @@ public class MapperRegister implements IMapperGeneric<UserEntity, RegisterReques
                 .userName(registerRequest.getUserName())
                 .password(passwordEncoder.encode(registerRequest.getPassword()))
                 .email(registerRequest.getEmail())
+                .status(true)
                 .created(new Date())
                 .phone(registerRequest.getPhone())
                 .address(registerRequest.getAddress())

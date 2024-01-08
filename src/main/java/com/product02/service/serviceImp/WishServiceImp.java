@@ -24,6 +24,12 @@ public class WishServiceImp implements WishService {
     private WishListRepository wishListRepository;
     @Autowired
     private WishListMapper wishListMapper;
+
+    /**
+     * Tìm danh sách yêu thích theo userId
+     * @param userId
+     * @return
+     */
     @Override
     public List<WishListEntity> findByUserWish_Id(long userId) {
         List<WishListEntity> list = new ArrayList<>();
@@ -35,17 +41,32 @@ public class WishServiceImp implements WishService {
         }
     }
 
+    /**
+     * danh sách yêu thích user
+     * @param userId
+     * @return
+     */
+
     @Override
     public List<WishListResponse> listAllByUserId(long userId) {
         List<WishListEntity> wishList = findByUserWish_Id(userId);
         return wishList.stream().map(wishListEntity -> wishListMapper.EntityToResponse(wishListEntity)).collect(Collectors.toList());
     }
 
+    /**
+     * Danh sách All yêu thích
+     * @return
+     */
     @Override
     public List<WishListEntity> listAll() {
         return wishListRepository.findAll();
     }
 
+    /**
+     * Tìm đối tượng danh sách theo id
+     * @param id
+     * @return
+     */
     @Override
     public WishListEntity findById(long id) {
         Optional<WishListEntity> wishListEntity = wishListRepository.findById(id);
@@ -58,14 +79,24 @@ public class WishServiceImp implements WishService {
 
     @Override
     public WishListResponse addWishList(WishListRequest wishListRequest) {
+        if (wishListRepository.findByProductWish_ProductId(wishListRequest.getProductId())!=null){
+            throw new CustomException("Product Exist");
+        }
         WishListEntity wishListEntity = wishListRepository.save(wishListMapper.requestToEntity(wishListRequest));
         return wishListMapper.EntityToResponse(wishListEntity);
     }
 
+    /**
+     * Xoá sp khỏi danh sách yêu thích
+     * @param id
+     * @param userId
+     * @return
+     */
+
     @Override
-    public boolean delete(long id) {
+    public boolean delete(long id, long userId) {
         try {
-            WishListEntity wishList = findById(id);
+            WishListEntity wishList = wishListRepository.findByIdAndUserWish_Id(id, userId);
             wishListRepository.delete(wishList);
             return true ;
         } catch (Exception e){

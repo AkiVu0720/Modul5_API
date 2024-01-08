@@ -41,6 +41,7 @@ public class ProductServiceImp implements ProductService {
        try {
            Pageable pageable = pageableSort(page,size,nameDirection,idDirection);
            Page<ProductEntity> list = productRepository.findAll(pageable);
+
            List<ProductResponse>productResponses = list.getContent()
                    .stream()
                    .map(productEntity ->
@@ -90,7 +91,7 @@ public class ProductServiceImp implements ProductService {
 
     @Override
     public boolean isExistProductName(String productName) {
-        return productRepository.existsByProductNameContainingIgnoreCase(productName);
+        return productRepository.existsByProductName(productName);
     }
 
     @Override
@@ -145,6 +146,11 @@ public class ProductServiceImp implements ProductService {
        }
     }
 
+    /**
+     * Xoá sản phẩm theo Id. ĐỔi trạng thái sang false
+     * @param productId
+     * @return
+     */
     @Override
     public boolean delete(long productId) {
         try {
@@ -152,23 +158,32 @@ public class ProductServiceImp implements ProductService {
             product.setStatus(false);
             save(product);
 //            productRepository.delete(product);
-            return true;
+            return save(product).isStatus();
         } catch (Exception e){
            throw new CustomException(e.getMessage()) ;
         }
     }
 
+    /**
+     * Cập nhập thông tin sản phẩm
+     * @param productId
+     * @param productRequest
+     * @return
+     */
     @Override
     public ProductResponse update(long productId, ProductUpdateRequest productRequest) {
             CategoryEntity category = categoryService.findEntityById(productRequest.getCategoryId());
             ProductEntity product = findEntityById(productId);
         try {
-            if (!isExistProductName(productRequest.getProductName())){
-                product.setProductName(productRequest.getProductName());
-            }else {
+            if (isExistProductName(productRequest.getProductName())
+                    &&!productRequest.getProductName().equals(product.getProductName())){
                 throw new CustomException("Product name Exist");
-            }
 
+            }else{
+                product.setProductName(productRequest.getProductName());
+            }
+            product.setQuantity(productRequest.getQuantity());
+            product.setUnitPrice(productRequest.getUnitPrice());
             product.setDescription(productRequest.getDescription());
             product.setImage(productRequest.getImage());
             product.setUpdated(new Date());
@@ -225,7 +240,7 @@ public class ProductServiceImp implements ProductService {
     @Override
     public List<ProductPermitResponse> listNewProduct() {
         try {
-            List<ProductEntity> list = productRepository.findTop10ByStatusIsTrueOrderByCreatedDesc();
+            List<ProductEntity> list = productRepository.findTop5ByStatusIsTrueOrderByCreatedDesc11();
             return list.stream().map(product ->mapper.EntityToResponsePermit(product)).collect(Collectors.toList());
         } catch (Exception e){
             throw new CustomException(e.getMessage());
@@ -258,6 +273,12 @@ public class ProductServiceImp implements ProductService {
         return productRepository.bestProductsInMonthRes();
     }
 
+    /**
+     * Thống kê doanh thu theo khoảng thời gian
+     * @param from
+     * @param to
+     * @return
+     */
     @Override
     public RevenueByTimeResponse revenueByTime(Date from, Date to) {
         try {
@@ -284,15 +305,30 @@ public class ProductServiceImp implements ProductService {
         return null;
     }
 
+    /**
+     * Tạo cấu trúc của Pageable
+     * @param page
+     * @param size
+     * @param nameDirection
+     * @param idDirection
+     * @return
+     */
     public Pageable pageableSort (int page, int size, String nameDirection, String idDirection){
         List<Sort.Order> oderList = new ArrayList<>();
-        Sort.Order orderId = sortProduct(nameDirection,"productId");
+        Sort.Order orderId = sortProduct(idDirection,"productId");
         oderList.add(orderId);
         Sort.Order orderName = sortProduct(nameDirection, "productName");
         oderList.add(orderName);
         Pageable pageable = PageRequest.of(page,size,Sort.by(oderList));
         return  pageable;
     }
+
+    /**
+     * Tạo đối đượng để sắp xếp
+     * @param nameDirection
+     * @param nameSort
+     * @return
+     */
     public Sort.Order sortProduct(String nameDirection, String nameSort){
         Sort.Order order;
         if (nameDirection.equalsIgnoreCase("asc")){

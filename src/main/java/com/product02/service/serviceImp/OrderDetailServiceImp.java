@@ -3,6 +3,7 @@ package com.product02.service.serviceImp;
 import com.product02.exception.CustomException;
 import com.product02.model.entity.OrderDetailEntity;
 import com.product02.model.entity.OrdersEntity;
+import com.product02.model.entity.ProductEntity;
 import com.product02.model.entity.ShoppingCardEntity;
 import com.product02.model.mapper.mapperOrder.OrderDetailMapper;
 import com.product02.model.mapper.mapperOrder.OrderMapper;
@@ -10,6 +11,7 @@ import com.product02.payload.response.OrderDetailResponse;
 import com.product02.repository.OrderDetailRepository;
 import com.product02.service.OrderDetailService;
 import com.product02.service.OrderService;
+import com.product02.service.ProductService;
 import com.product02.service.ShoppingCartService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
@@ -30,6 +32,9 @@ public class OrderDetailServiceImp implements OrderDetailService {
     private OrderDetailRepository orderDetailRepository;
     @Autowired
     private OrderDetailMapper orderMapper;
+    @Autowired
+    @Lazy
+    private ProductService productService;
     @Override
     public OrderDetailEntity shoppingCartToOderDetail(long orderId, ShoppingCardEntity shoppingCard){
         OrdersEntity orders = orderService.findById(orderId);
@@ -50,6 +55,21 @@ public class OrderDetailServiceImp implements OrderDetailService {
                 .collect(Collectors.toList());
         return orderDetailList;
     }
+    @Override
+    public List<ShoppingCardEntity> listShoppingCard(List<Integer> listCartId){
+        List<ShoppingCardEntity> list = shoppingCartService.listShoppingCartByCartId(listCartId);
+        list.stream().forEach(orderDetail -> {
+            ProductEntity product = productService.findEntityById(orderDetail.getProduct().getProductId());
+            if (orderDetail.getQuantity()>product.getQuantity()){
+                throw new CustomException("Tồn kho: "+product.getProductName()+ " không đủ");
+            }else {
+                product.setQuantity(product.getQuantity()-orderDetail.getQuantity());
+                productService.save(product);
+            }
+        });
+        return list;
+    }
+
 
     /**
      * Tính tiền cho 1 đơn hàng Order

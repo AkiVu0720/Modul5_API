@@ -16,7 +16,7 @@ import java.util.Set;
 
 public interface UserService {
     Page<UserEntity>findAll(Pageable pageable);
-    Page<UserEntity> sortByNameAndUser(int page, int size,String idDirection, String nameDirection, String Direction);
+    Page<UserResponse> sortByNameAndUser(int page, int size,String idDirection, String nameDirection, String Direction);
     UserEntity findByUserName(String userName);
     List<UserResponse> findByFullNameContaining(String name);
     UserEntity findUserById(long id);
@@ -25,7 +25,7 @@ public interface UserService {
     boolean existsByUserName(String userName);
     boolean existsByEmail(String email);
     UserResponse update(long id, UserRequest userRequest);
-    boolean uploadPass(long id, UploadPassRequest passRequest);
+    String uploadPass(long id, UploadPassRequest passRequest);
     RegisterResponse saveOrUpdate(RegisterRequest registerRequest);
     UserResponse addRoleById(long userId, long roleId);
     boolean deleteRole(long userId, long roleId);

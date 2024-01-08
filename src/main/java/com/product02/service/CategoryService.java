@@ -10,7 +10,7 @@ import org.springframework.data.domain.Page;
 
 import java.util.List;
 public interface CategoryService {
-    Page<CategoryResponse> findAll(int page, int size, String nameDirection);
+    Page<CategoryResponse> findAll(int page, int size, String nameDirection,String dayDirection);
     List<CategoryResponse> findAllByStatusIsTrue();
     CategoryResponse findById(long categoryId);
     CategoryEntity findEntityById(long categoryId);

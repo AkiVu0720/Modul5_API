@@ -8,6 +8,7 @@ import com.product02.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Set;
@@ -42,11 +43,18 @@ public class RoleController {
         baseResponse.setStatusCode(200);
         return new ResponseEntity<>(baseResponse, HttpStatus.OK);
     }
+
+    /**
+     * Lấy về danh sách các quyên
+     * @return
+     */
     @GetMapping("/admin/roles")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> findAllRole(){
         Set<RoleResponse> response =rolesService.findAllRole();
         BaseResponse baseResponse = new BaseResponse();
         baseResponse.setData(response);
+        baseResponse.setMessage("Danh sách Role");
         baseResponse.setStatusCode(200);
         return new ResponseEntity<>(baseResponse, HttpStatus.OK);
     }

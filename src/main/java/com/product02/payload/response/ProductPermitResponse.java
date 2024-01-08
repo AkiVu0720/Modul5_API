@@ -14,7 +14,7 @@ import java.util.Date;
 @AllArgsConstructor
 public class ProductPermitResponse {
     private long productId;
-    private long categoryId;
+    private String categoryName;
     private String sku;
     private String productName;
     private String description;

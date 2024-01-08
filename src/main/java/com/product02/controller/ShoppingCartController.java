@@ -1,5 +1,6 @@
 package com.product02.controller;
 
+import com.product02.exception.CustomException;
 import com.product02.model.entity.OrdersEntity;
 import com.product02.model.entity.ShoppingCardEntity;
 import com.product02.payload.requet.OrderRequest;
@@ -73,6 +74,7 @@ public class ShoppingCartController {
         BaseResponse baseResponse = new BaseResponse();
         ShoppingCartResponse cartResponse = cartService.addShoppingCart(userId,cartRequest);
         baseResponse.setStatusCode(200);
+        baseResponse.setMessage("Thêm sản phẩm vào giỏ hàng");
         baseResponse.setData(cartResponse);
         return new ResponseEntity<>(baseResponse, HttpStatus.OK);
     }
@@ -83,10 +85,13 @@ public class ShoppingCartController {
      * @return
      */
     @DeleteMapping("shopping-cart/{userId}/clear")
-    public ResponseEntity<?> deleteAllByUserId(@PathVariable long userId){
+    @PreAuthorize("hasRole('USER')")
+    public ResponseEntity<?> deleteAllByUserId(
+            @PathVariable long userId){
         BaseResponse baseResponse = new BaseResponse();
         boolean isSuccess = cartService.deleteAllProductInCart(userId);
         baseResponse.setStatusCode(200);
+        baseResponse.setMessage("  Xoá tất cả sản phẩm trong giỏ hàng");
         baseResponse.setData(isSuccess);
         return new ResponseEntity<>(baseResponse, HttpStatus.OK);
     }
@@ -99,10 +104,13 @@ public class ShoppingCartController {
      */
     @DeleteMapping("shopping-cart/{userId}/delete/{shoppingCartId}")
     @PreAuthorize("hasRole('USER')")
-    public ResponseEntity<?> deleteByUserIdAndCartId(@PathVariable long userId, @PathVariable int shoppingCartId){
+    public ResponseEntity<?> deleteByUserIdAndCartId(
+            @PathVariable long userId,
+            @PathVariable int shoppingCartId){
         BaseResponse baseResponse = new BaseResponse();
         boolean isSuccess = cartService.deleteByCartId(userId,shoppingCartId);
         baseResponse.setStatusCode(200);
+        baseResponse.setMessage("Xoá 1 sản phẩm trong giỏ hàng");
         baseResponse.setData(isSuccess);
         return new ResponseEntity<>(baseResponse, HttpStatus.OK);
     }
@@ -116,16 +124,20 @@ public class ShoppingCartController {
      */
     @PutMapping("shopping-cart/{userId}/update/{cartItemId}")
     @PreAuthorize("hasRole('USER')")
-    public ResponseEntity<?> updateQuantity(@PathVariable long userId, @PathVariable int cartItemId, @RequestBody ShoppingCartUpdateQuantityResponse cartRequest){
+    public ResponseEntity<?> updateQuantity(
+            @PathVariable long userId,
+            @PathVariable int cartItemId,
+            @RequestBody ShoppingCartUpdateQuantityResponse cartRequest){
             BaseResponse baseResponse = new BaseResponse();
             ShoppingCartResponse response = cartService.update(userId,cartItemId,cartRequest);
             baseResponse.setStatusCode(200);
+            baseResponse.setMessage("Thay đổi sốượng sản phẩm");
             baseResponse.setData(response);
             return new ResponseEntity<>(baseResponse, HttpStatus.OK);
     }
 
     @PostMapping("shopping-cart/{userId}/check-out")
-//    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<?> newOrder(
             @PathVariable long userId,
             @RequestBody OrderRequest orderRequest
@@ -137,7 +149,7 @@ public class ShoppingCartController {
             baseResponse.setData(response);
             return new ResponseEntity<>(baseResponse, HttpStatus.OK);
         } catch (Exception e){
-            throw new RuntimeException(e.getMessage());
+            throw new CustomException(e.getMessage());
         }
 
     }

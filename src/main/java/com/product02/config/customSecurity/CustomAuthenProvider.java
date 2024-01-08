@@ -1,5 +1,6 @@
 package com.product02.config.customSecurity;
 
+import com.product02.model.entity.UserEntity;
 import com.product02.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
@@ -9,6 +10,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
@@ -16,8 +18,9 @@ import org.springframework.stereotype.Component;
 public class CustomAuthenProvider implements AuthenticationProvider {
     @Autowired
     private UserRepository userRepository;
-    @Lazy
+
     @Autowired
+    @Lazy
     private PasswordEncoder passwordEncoder;
     /**
      * Performs authentication with the same contract as
@@ -31,15 +34,18 @@ public class CustomAuthenProvider implements AuthenticationProvider {
      * the next <code>AuthenticationProvider</code> that supports the presented
      * <code>Authentication</code> class will be tried.
      * @throws AuthenticationException if authentication fails.
+     * OK
      */
     @Override
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
+        //user Token truyền vào đi chứng thực.
         String userName = authentication.getName();
         String password = authentication.getCredentials().toString();
-        UserDetails user = CustomUserDetail.mapUserToUserDetail(userRepository.findByUserName(userName));
-        if (user!=null && passwordEncoder.matches(password,user.getPassword())){
-            return new UsernamePasswordAuthenticationToken(userName,user.getPassword(),user.getAuthorities());
+        UserDetails userDetail = CustomUserDetail.mapUserToUserDetail(userRepository.findByUserName(userName));
+        if (userDetail!=null && passwordEncoder.matches(password,userDetail.getPassword())){
+            return new UsernamePasswordAuthenticationToken(userName,userDetail.getPassword(),userDetail.getAuthorities());
         }
+
         return null;
     }
 
@@ -65,6 +71,7 @@ public class CustomAuthenProvider implements AuthenticationProvider {
      */
     @Override
     public boolean supports(Class<?> authentication) {
+        // Hỗ trợ kiểu so sánh Username Token
         return authentication.equals(UsernamePasswordAuthenticationToken.class);
     }
 }

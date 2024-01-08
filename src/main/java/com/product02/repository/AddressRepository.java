@@ -12,6 +12,6 @@ import java.util.Set;
 public interface AddressRepository extends JpaRepository<AddressEntity,Long> {
     @Query("select a from AddressEntity as a where a.userAddr.id = ?1")
     Set<AddressEntity> findByUserAddrId(long userId);
-    AddressEntity findByAddressIdAndUserAddr_Id(long userId, long addressId);
+    AddressEntity findByUserAddr_IdAndAddressId(long userId, long addressId);
 
 }

@@ -12,8 +12,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -23,15 +25,25 @@ public class ProductController {
     @Autowired
     private ProductService productService;
     @PostMapping("admin/products")
-    public ResponseEntity<?> createCategory(@RequestBody ProductRequest productRequest){
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> createCategory(
+            @RequestBody ProductRequest productRequest){
         BaseResponse baseResponse = new BaseResponse();
         ProductResponse productResponse = productService.create(productRequest);
         baseResponse.setStatusCode(200);
         baseResponse.setData(productResponse);
         return new ResponseEntity<>(baseResponse, HttpStatus.OK);
     }
+
+    /**
+     * Thông tin chi tiết sản phẩm
+     * @param productId
+     * @return
+     */
     @GetMapping("admin/products/{productId}")
-    public ResponseEntity<?> findProductById(@PathVariable long productId){
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> findProductById(
+            @PathVariable long productId){
         BaseResponse baseResponse = new BaseResponse();
         ProductResponse productResponse = productService.findById(productId);
         baseResponse.setStatusCode(200);
@@ -40,12 +52,13 @@ public class ProductController {
     }
 
     /**
-     * Tìm  kiếm sản phâmt theo mã id
+     * Tìm  kiếm sản phẩm theo mã id
      * @param productId
      * @return
      */
     @GetMapping("products/{productId}")
-    public ResponseEntity<?> findProductPermitById(@PathVariable long productId){
+    public ResponseEntity<?> findProductPermitById(
+            @PathVariable long productId){
         BaseResponse baseResponse = new BaseResponse();
         ProductPermitResponse productResponse = productService.findProductPermitById(productId);
         baseResponse.setStatusCode(200);
@@ -53,33 +66,69 @@ public class ProductController {
         baseResponse.setData(productResponse);
         return new ResponseEntity<>(baseResponse, HttpStatus.OK);
     }
+
+    /**
+     * Danh sách Tất cả các sản phẩm
+     * @param page
+     * @param size
+     * @param nameDirection
+     * @param idDirection
+     * @return
+     */
     @GetMapping("admin/products")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?>findAllProduct(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "2") int size,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "3") int size,
             @RequestParam (defaultValue = "ASC")String nameDirection,
             @RequestParam (defaultValue = "ASC")String idDirection
     ){
         BaseResponse baseResponse = new BaseResponse();
-        Page<ProductResponse> productResponses = productService.findPageAll(page,size,nameDirection,idDirection);
+        Page<ProductResponse> productPage = productService.findPageAll(page-1,size,nameDirection,idDirection);
         baseResponse.setStatusCode(200);
-        baseResponse.setData(productResponses.getContent());
-        return new ResponseEntity<>(baseResponse, HttpStatus.OK);
+        baseResponse.setMessage("Danh sách tất cả các sản phẩm");
+        baseResponse.setData(productPage.getContent());
+        Map<String, Object> dataResponse = new HashMap<>();
+        dataResponse.put("dataUsers", baseResponse);
+        dataResponse.put("totalPage", productPage.getTotalPages());
+        dataResponse.put("totalUser", productPage.getTotalElements());
+        return new ResponseEntity<>(dataResponse, HttpStatus.OK);
     }
+
+    /**
+     * UpDate sản phẩm
+     * @param productId
+     * @param productUpdateRequest
+     * @return
+     */
     @PutMapping("admin/products/{productId}")
-    public ResponseEntity<?>updateProduct(@PathVariable long productId,@RequestBody ProductUpdateRequest productUpdateRequest){
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?>updateProduct(
+            @PathVariable long productId,
+            @RequestBody ProductUpdateRequest productUpdateRequest){
         BaseResponse baseResponse = new BaseResponse();
         ProductResponse productResponse = productService.update(productId,productUpdateRequest);
         baseResponse.setStatusCode(200);
+        baseResponse.setMessage("Thông tin chi tiết s.p");
         baseResponse.setData(productResponse);
         return new ResponseEntity<>(baseResponse, HttpStatus.OK);
     }
+
+    /**
+     * Xoá sản phẩm theo id
+     * @param productId
+     * @return
+     */
     @DeleteMapping("admin/products/{productId}")
-    public ResponseEntity<?>deleteProduct(@PathVariable long productId){
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?>deleteProduct(
+            @PathVariable long productId
+    ){
         BaseResponse baseResponse = new BaseResponse();
         boolean isSuccess = productService.delete(productId);
         baseResponse.setStatusCode(200);
         baseResponse.setData(isSuccess);
+        baseResponse.setMessage("Xoá sản phẩm (Đổi trạng thái)");
         return new ResponseEntity<>(baseResponse, HttpStatus.OK);
     }
 
@@ -93,7 +142,7 @@ public class ProductController {
      */
     @GetMapping("products")
     public ResponseEntity<?>findAllProductStatusTrue(
-            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "3") int size,
             @RequestParam (defaultValue = "ASC")String nameDirection,
             @RequestParam (defaultValue = "ASC")String idDirection

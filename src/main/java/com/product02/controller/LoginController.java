@@ -1,5 +1,6 @@
 package com.product02.controller;
 
+import com.product02.exception.CustomException;
 import com.product02.payload.requet.LoginRequest;
 import com.product02.payload.requet.RegisterRequest;
 import com.product02.payload.response.BaseResponse;
@@ -8,7 +9,9 @@ import com.product02.payload.response.RegisterResponse;
 import com.product02.service.LoginService;
 import com.product02.service.UserService;
 import com.product02.utils.jwt.JwtHelper;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -28,17 +31,21 @@ public class LoginController {
     @Autowired
     private AuthenticationManager authenticationManager;
     @PostMapping("/sign-in")
-    public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) {
-        BaseResponse baseResponse = new BaseResponse();
-        LoginResponse loginResponse=loginService.login(loginRequest);
-        baseResponse.setMessage("Đăng nhập thành công");
-        baseResponse.setStatusCode(200);
-        baseResponse.setData(loginResponse);
+    public ResponseEntity<?> login(@Valid @RequestBody LoginRequest loginRequest) {
+//        try {
+            BaseResponse baseResponse = new BaseResponse();
+            LoginResponse loginResponse=loginService.login(loginRequest);
+            baseResponse.setMessage("Đăng nhập thành công");
+            baseResponse.setStatusCode(200);
+            baseResponse.setData(loginResponse);
+            return new ResponseEntity<>(baseResponse, HttpStatus.OK);
+//        } catch (Exception e){
+//            throw new CustomException(e.getMessage());
+//        }
 
-        return new ResponseEntity<>(baseResponse, HttpStatus.OK);
     }
     @PostMapping("/sign-up")
-    public ResponseEntity<?> register(@RequestBody RegisterRequest request){
+    public ResponseEntity<?> register( @Valid @RequestBody RegisterRequest request){
         if (userService.existsByUserName(request.getUserName())){
             return ResponseEntity.badRequest().body("Username is exist");
         }

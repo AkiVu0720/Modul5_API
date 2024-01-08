@@ -14,7 +14,7 @@ public interface WishService {
     List<WishListEntity> listAll();
     WishListEntity findById(long id);
     WishListResponse addWishList(WishListRequest wishListRequest);
-    boolean delete(long id);
+    boolean delete(long id,long userId);
     List<WishListFeatured> listFeaturedProduct();
 
 }

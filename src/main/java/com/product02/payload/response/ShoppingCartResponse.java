@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Builder
 public class ShoppingCartResponse {
+    private int cartId;
     private String productName;
     private int quantity;
     private  double price;

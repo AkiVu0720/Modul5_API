@@ -3,10 +3,15 @@ package com.product02.model.entity;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.validator.constraints.Length;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.util.Date;
@@ -33,15 +38,20 @@ public class UserEntity {
     private long id;
 
     @Column(name = "username",columnDefinition = "varchar(100)", unique = true, nullable = false)
+    @NotNull(message = "userName not null")
+    @NotEmpty(message = "userName not empty")
+    @Length(min = 6,max = 100,message = "Min:6 - Max:100")
     private String userName;
     @Column(name = "password",nullable = false)
     private String password;
     @Column(name = "email",unique = true)
+    @Email(message = "Email invalid format" )
     private String email;
     @Column(name = "fullname",columnDefinition = "varchar(100)")
     private String fullName;
     private String avatar;
     @Column(name = "phone", columnDefinition = "varchar(15)",unique = true)
+    @Pattern(regexp = "(84|0[3|5|7|8|9])+([0-9]{8})", message = "Yêu cầu định dạng Việt Nam (10 số)")
     private String phone;
 
     @Column(name = "created_at")
@@ -55,6 +65,8 @@ public class UserEntity {
     private Date updated;
 
     @Column(name = "address", unique = true)
+    @NotNull(message = "Address not null")
+    @NotEmpty(message = "Address not empty")
     private String address;
 
     @Column(name = "status",columnDefinition = "bit default 1")

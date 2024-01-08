@@ -21,6 +21,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -83,7 +84,8 @@ public class ShoppingCartServiceImp implements ShoppingCartService {
     @Override
     public ShoppingCardEntity findById(int cartId) {
         try {
-        return cartRepository.findById(cartId).get();
+            Optional<ShoppingCardEntity> card = cartRepository.findById(cartId);
+            return card.get();
         } catch (Exception e){
             throw new CustomException(e.getMessage());
         }
@@ -97,8 +99,15 @@ public class ShoppingCartServiceImp implements ShoppingCartService {
     @Override
     public boolean deleteAllProductInCart(long userId) {
         try {
-            cartRepository.deleteByUser_Id(userId);
-            return true;
+            List<ShoppingCardEntity> list  = listShoppingCartByUserId(userId) ;
+
+            if (list.size() <1){
+                throw new CustomException("User not Exist");
+            }else {
+                cartRepository.deleteByUser_Id(userId);
+                return true;
+            }
+
         } catch (Exception e){
             throw new CustomException(e.getMessage());
         }
@@ -166,6 +175,17 @@ public class ShoppingCartServiceImp implements ShoppingCartService {
         }
         return cartRepository.findByUser_IdAndProduct_ProductId(userId,productId);
     }
+    @Override
+    public ShoppingCardEntity findByUser_IdAndCartId(long userId, long cartId) {
+
+        if (userService.findUserById(userId)==null){
+            throw new CustomException("User not Exist");
+        }
+        if (productService.findById(cartId)==null){
+            throw new CustomException("Product not Exist");
+        }
+        return cartRepository.findByUser_IdAndCartId(userId,cartId);
+    }
 
     /**
      * Thay đổi,Cập nhật số lượng sản phẩm
@@ -177,7 +197,7 @@ public class ShoppingCartServiceImp implements ShoppingCartService {
     @Override
     public ShoppingCartResponse update(long userId, int productId, ShoppingCartUpdateQuantityResponse cartRequest) {
         try {
-            ShoppingCardEntity shoppingCard = findByUser_IdAndProduct_ProductId(userId,productId);
+            ShoppingCardEntity shoppingCard = cartRepository.findByUser_IdAndCartId(userId,productId);
             shoppingCard.setQuantity(cartRequest.getQuantity());
             cartRepository.save(shoppingCard);
             return cartMapper.EntityToResponse(shoppingCard);

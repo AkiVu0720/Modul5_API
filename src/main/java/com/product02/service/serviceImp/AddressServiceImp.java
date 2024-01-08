@@ -46,21 +46,35 @@ public class AddressServiceImp implements AddressService {
 
     }
 
+    /**
+     * Chuyển địa chỉ sang response
+     * @param userId
+     * @param addressId
+     * @return
+     */
+
     @Override
     public AddressResponse findByUserAndAddressId(long userId, long addressId) {
         userService.findUserById(userId);
         try {
-        return addressMapper.EntityToResponse(addressRepository.findByAddressIdAndUserAddr_Id(userId,addressId));
+        return addressMapper.EntityToResponse(addressRepository.findByUserAddr_IdAndAddressId(userId,addressId));
         } catch (Exception e){
             throw new CustomException("Loi Address not Fount: "+ e.getMessage());
         }
     }
 
+    /**
+     * Lấy địa chỉ theo userId và addressID
+     * @param userId
+     * @param addressId
+     * @return
+     */
+
     @Override
     public AddressEntity findByUserAndAddressIdEntity(long userId, long addressId) {
         userService.findUserById(userId);
         try {
-            return addressRepository.findByAddressIdAndUserAddr_Id(userId,addressId);
+            return addressRepository.findByUserAddr_IdAndAddressId(userId,addressId);
         } catch (Exception e){
             throw new CustomException("Loi Address not Fount: "+ e.getMessage());
         }

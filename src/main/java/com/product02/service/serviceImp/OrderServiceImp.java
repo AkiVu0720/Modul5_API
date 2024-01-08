@@ -38,14 +38,21 @@ public class OrderServiceImp implements OrderService {
     private OrderDetailService  orderDetailService;
     @Autowired
     private OrderMapper orderMapper;
+    @Autowired
+    @Lazy
+    private ProductService productService;
     /**
      * Khởi tạo đơn hàng
      */
     @Override
     public OrdersEntity createOder(long userId, OrderRequest orderRequest) {
+        orderDetailService.listShoppingCard(orderRequest.getListCartId());
+        UserEntity user = userService.findUserById(userId);
+        if (orderRequest.getListCartId().size()<1){
+            throw new CustomException("No Product");
+        }
         String uuid = UUID.randomUUID().toString();
         UUID_CODE = uuid;
-        UserEntity user = userService.findUserById(userId);
         OrdersEntity orders = new OrdersEntity();
         orders.setNote(orderRequest.getNote());
         orders.setReceiveName(orderRequest.getName());
@@ -151,10 +158,15 @@ public class OrderServiceImp implements OrderService {
            return orderRepository.findByOrderIdAndUserOder_Id(orderId,userId);
     }
 
+    /**
+     * Tìm Order theo trạng thái.
+     * @param oderStatus
+     * @return
+     */
     @Override
     public List<OrderByStatusResponse> findByStatus(String oderStatus) {
         EStatus eStatus = stringToEnumStatusValue(oderStatus);
-        List<OrdersEntity> list = orderRepository.findByStatus(eStatus);
+        List<OrdersEntity> list = orderRepository.findByStatusOrderByOrderAtDesc(eStatus);
         return list.stream().map(orders ->
                 orderMapper.EntityToOrderByStatus(orders))
                 .collect(Collectors.toList());

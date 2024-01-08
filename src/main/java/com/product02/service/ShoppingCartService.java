@@ -21,4 +21,5 @@ public interface ShoppingCartService {
     ShoppingCartResponse addShoppingCart(long userId, ShoppingCartRequest cartRequest);
     ShoppingCardEntity findByUser_IdAndProduct_ProductId(long userId, long productId);
     ShoppingCartResponse update(long userId, int productId, ShoppingCartUpdateQuantityResponse cartRequest);
+    ShoppingCardEntity findByUser_IdAndCartId(long userId, long cartId);
 }

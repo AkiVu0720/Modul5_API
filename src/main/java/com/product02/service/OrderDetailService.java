@@ -12,4 +12,5 @@ public interface OrderDetailService {
     List<OrderDetailEntity> orderDetailEntityList(List<Integer> listCartId, long orderId);
     BigDecimal sumTotalByOrder(long orderId);
     List<OrderDetailResponse> findByIdRes(long orderId);
+    List<ShoppingCardEntity> listShoppingCard(List<Integer> listCartId);
 }

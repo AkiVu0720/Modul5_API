@@ -21,4 +21,6 @@ public interface WishListRepository extends JpaRepository<WishListEntity,Long> {
             "from WishListEntity w join ProductEntity pr on w.productWish.productId=pr.productId where pr.status =true " +
             "group by w.productWish order by count (w.productWish.productId) DESC limit 10")
     List<WishListFeatured> listFeaturedProduct();
+    WishListEntity findByProductWish_ProductId(long productId);
+    WishListEntity findByIdAndUserWish_Id(long wishId, long userId);
 }

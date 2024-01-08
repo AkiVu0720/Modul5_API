@@ -18,10 +18,7 @@ import com.product02.service.RolesService;
 import com.product02.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.*;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -56,17 +53,47 @@ public class UserServiceImp implements UserService {
      * @return
      */
     @Override
-    public Page<UserEntity> sortByNameAndUser(int page, int size,String idDirection,String nameDirection, String statusDirection) {
-        List<Sort.Order> orderList = new ArrayList<>();
-        Sort.Order orderId = sortByNameSort(idDirection,"id");
-        orderList.add(orderId);
-        Sort.Order orderName = sortByNameSort(nameDirection,"fullName");
-        orderList.add(orderName);
-        Sort.Order orderStatus = sortByNameSort(statusDirection,"status");
-        orderList.add(orderStatus);
-        Pageable pageable = PageRequest.of(page,size,Sort.by(orderList));
-        return userRepository.findAll(pageable);
+    public Page<UserResponse> sortByNameAndUser(int page, int size,String idDirection,String nameDirection, String statusDirection) {
+        try {
+            Pageable pageable = pageableSort(page,size,nameDirection,idDirection,statusDirection);
+            Page<UserEntity> list = userRepository.findAll(pageable);
+            List<UserResponse> userResponseList = list.getContent().stream()
+                    .map(userEntity -> userMapper.EntityToResponse(userEntity))
+                    .collect(Collectors.toList());
+            Page<UserResponse> userResponses = new PageImpl<>(userResponseList,pageable, list.getTotalElements());
+            return userResponses;
 
+        } catch (Exception e){
+            throw new CustomException(e.getMessage());
+        }
+
+    }
+    public Pageable pageableSort (int page, int size, String nameDirection, String idDirection,String statusDirection){
+        List<Sort.Order> oderList = new ArrayList<>();
+        Sort.Order orderId = sortProduct(idDirection,"id");
+        oderList.add(orderId);
+        Sort.Order orderName = sortProduct(nameDirection, "fullName");
+        oderList.add(orderName);
+        Sort.Order orderStatus = sortByNameSort(statusDirection,"status");
+        oderList.add(orderStatus);
+        Pageable pageable = PageRequest.of(page,size,Sort.by(oderList));
+        return  pageable;
+    }
+
+    /**
+     * Tạo đối đượng để sắp xếp
+     * @param nameDirection
+     * @param nameSort
+     * @return
+     */
+    public Sort.Order sortProduct(String nameDirection, String nameSort){
+        Sort.Order order;
+        if (nameDirection.equalsIgnoreCase("asc")){
+            order = new Sort.Order(Sort.Direction.ASC,nameSort);
+        } else {
+            order = new Sort.Order(Sort.Direction.DESC,nameSort);
+        }
+        return  order;
     }
 
     /**
@@ -101,6 +128,11 @@ public class UserServiceImp implements UserService {
         }
     }
 
+    /**
+     * Tìm user theo Id
+     * @param id
+     * @return
+     */
     @Override
     public UserEntity findUserById(long id) {
         Optional<UserEntity> user= userRepository.findById(id);
@@ -116,7 +148,6 @@ public class UserServiceImp implements UserService {
         UserEntity user = findUserById(id);
         return userMapper.EntityToResponse(user);
     }
-
     /**
      *
      * @param stringList List role được lấy tù form đăng kí.
@@ -162,7 +193,7 @@ public class UserServiceImp implements UserService {
     }
 
     @Override
-    public boolean uploadPass(long id, UploadPassRequest passRequest) {
+    public String uploadPass(long id, UploadPassRequest passRequest) {
         try {
             UserEntity user = findUserById(id);
             boolean isConfirmPass = confirmPassword(passRequest.getNewPass(), passRequest.getConfirmPass());
@@ -170,12 +201,12 @@ public class UserServiceImp implements UserService {
             if (isConfirmPass && isExistPass){
                 user.setPassword(passwordEncoder.encode(passRequest.getNewPass()));
                 userRepository.save(user);
-                return  true;
+                return  passRequest.getNewPass();
             }else {
                 throw new PasswordNotMatchException("Password not Match");
             }
         } catch (Exception e){
-            throw  new UserNotFoundException("Loi xay ra khi upLoadPassword: "+e.getMessage());
+            throw  new CustomException("Loi xay ra khi upLoadPassword: "+e.getMessage());
         }
 
     }
@@ -188,7 +219,9 @@ public class UserServiceImp implements UserService {
     @Override
     public RegisterResponse saveOrUpdate(RegisterRequest registerRequest) {
         try {
-            return mapperRegister.EntityToResponse(userRepository.save(mapperRegister.requestToEntity(registerRequest)));
+            RegisterResponse response = mapperRegister.EntityToResponse(userRepository.save(mapperRegister.requestToEntity(registerRequest)));
+            response.setPassword(registerRequest.getPassword());
+            return response ;
         } catch (Exception e){
             throw new UserNotFoundException("Loi them moi, cap nhap User: "+ e.getMessage());
         }
@@ -222,6 +255,11 @@ public class UserServiceImp implements UserService {
             }
     }
 
+    /**
+     * Khoá và mở khoá user
+     * @param userId
+     * @return
+     */
     @Override
     public boolean unlockStatus(long userId) {
         UserEntity user =findUserById(userId);
@@ -231,7 +269,7 @@ public class UserServiceImp implements UserService {
             user.setStatus(true);
         }
         userRepository.save(user);
-        return true;
+        return userRepository.save(user).isStatus();
     }
 
     public RolesEntity findRoleOfUser(long userId,long roleId) {
